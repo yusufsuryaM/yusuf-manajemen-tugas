@@ -1,8 +1,9 @@
 package com.yusuf0080.manajementugas.ui.screen
 
+import androidx.lifecycle.ViewModel
 import com.yusuf0080.manajementugas.model.Tugas
 
-class MainViewModel {
+class MainViewModel : ViewModel() {
 
     val data = listOf(
         Tugas(
