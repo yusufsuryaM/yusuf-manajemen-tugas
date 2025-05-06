@@ -3,9 +3,12 @@ package com.yusuf0080.manajementugas.ui.screen
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -25,8 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,12 +52,14 @@ fun DetailScreen(navController: NavController, id: Long? = null) {
 
     var judul by remember { mutableStateOf("") }
     var catatan by remember { mutableStateOf("") }
+    var prioritas by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         if (id == null) return@LaunchedEffect
         val data = viewModel.getCatatan(id) ?: return@LaunchedEffect
         judul = data.judul
         catatan = data.catatan
+        prioritas = data.Prioritas
     }
 
     Scaffold(
@@ -93,6 +101,8 @@ fun DetailScreen(navController: NavController, id: Long? = null) {
             onTitleChange = { judul = it },
             desc = catatan,
             onDescChange = { catatan = it },
+            prioritas = prioritas,
+            onPrioritasChange =  { prioritas = it },
             modifier = Modifier.padding(padding)
         )
     }
@@ -104,6 +114,8 @@ fun FormCatatan(
     onTitleChange: (String) -> Unit,
     desc: String,
     onDescChange: (String) -> Unit,
+    prioritas: String,
+    onPrioritasChange: (String) -> Unit,
     modifier: Modifier
 ) {
     Column(
@@ -128,8 +140,42 @@ fun FormCatatan(
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.Sentences
             ),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxWidth()
         )
+        Text(
+            text = "Prioritas",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+        )
+        val prioritasOptions = listOf("High", "Medium", "Low")
+        Column(
+            modifier = Modifier.selectableGroup(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            prioritasOptions.forEach { option ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = (option == prioritas),
+                            onClick = { onPrioritasChange(option) },
+                            role = Role.RadioButton
+                        )
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = (option == prioritas),
+                        onClick = null
+                    )
+                    Text(
+                        text = option,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
