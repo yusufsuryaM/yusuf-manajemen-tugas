@@ -70,4 +70,7 @@ class MainViewModel : ViewModel() {
             "Low"
         )
     )
+    fun getCatatan(id: Long): Tugas? {
+        return data.find { it.id == id }
+    }
 }
