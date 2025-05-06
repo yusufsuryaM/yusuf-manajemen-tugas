@@ -35,9 +35,11 @@ import androidx.navigation.compose.rememberNavController
 import com.yusuf0080.manajementugas.R
 import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
 
+const val KEY_ID_CATATAN = "idCatatan"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(navController: NavController) {
+fun DetailScreen(navController: NavController, id: Long? = null) {
     var judul by remember { mutableStateOf("") }
     var catatan by remember { mutableStateOf("") }
 
@@ -54,7 +56,10 @@ fun DetailScreen(navController: NavController) {
                     }
                 },
                 title = {
-                    Text(text = stringResource(id = R.string.tambah_catatan))
+                    if (id == null)
+                        Text(text = stringResource(id = R.string.tambah_catatan))
+                    else
+                        Text(text = stringResource(id = R.string.edit_catatan))
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
