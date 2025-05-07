@@ -15,8 +15,4 @@ class MainViewModel(dao: TugasDao) : ViewModel() {
         started = SharingStarted.WhileSubscribed(),
         initialValue = emptyList()
     )
-
-    fun getCatatan(id: Long): Tugas? {
-        return data.value.find { it.id == id }
-    }
 }

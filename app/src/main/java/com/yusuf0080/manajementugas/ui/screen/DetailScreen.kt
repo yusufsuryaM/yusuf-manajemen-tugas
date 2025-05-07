@@ -1,6 +1,7 @@
 package com.yusuf0080.manajementugas.ui.screen
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
@@ -41,14 +43,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.yusuf0080.manajementugas.R
+import com.yusuf0080.manajementugas.model.Tugas
 import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
+import com.yusuf0080.manajementugas.util.ViewModelFactory
 
 const val KEY_ID_CATATAN = "idCatatan"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(navController: NavController, id: Long? = null) {
-    val viewModel: MainViewModel = viewModel()
+    val context = LocalContext.current
+    val factory = ViewModelFactory(context)
+    val viewModel: DetailViewModel = viewModel(factory = factory)
 
     var judul by remember { mutableStateOf("") }
     var catatan by remember { mutableStateOf("") }
@@ -56,7 +62,7 @@ fun DetailScreen(navController: NavController, id: Long? = null) {
 
     LaunchedEffect(Unit) {
         if (id == null) return@LaunchedEffect
-        val data = viewModel.getCatatan(id) ?: return@LaunchedEffect
+        val data = viewModel.getTugas(id) ?: return@LaunchedEffect
         judul = data.judul
         catatan = data.catatan
         prioritas = data.Prioritas
@@ -85,7 +91,15 @@ fun DetailScreen(navController: NavController, id: Long? = null) {
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        if (judul == "" || catatan == "") {
+                            Toast.makeText(context, R.string.invalid, Toast.LENGTH_LONG).show()
+                            return@IconButton
+                        }
+                        if (id == null) {
+                            viewModel.insert(judul, catatan, prioritas)
+                        }
+                        navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Outlined.Check,
                             contentDescription = stringResource(R.string.simpan),
