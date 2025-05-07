@@ -1,5 +1,6 @@
 package com.yusuf0080.manajementugas.database
 
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -18,4 +19,7 @@ interface TugasDao {
 
     @Query("SELECT * FROM tugas ORDER BY tanggal DESC")
     fun getTugas(): Flow<List<Tugas>>
+
+    @Query("SELECT  * FROM tugas WHERE id = :id")
+    suspend fun getTugasById(id: Long): Tugas?
 }
