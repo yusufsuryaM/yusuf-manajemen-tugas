@@ -22,4 +22,7 @@ interface TugasDao {
 
     @Query("SELECT  * FROM tugas WHERE id = :id")
     suspend fun getTugasById(id: Long): Tugas?
+
+    @Query("DELETE FROM tugas WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
