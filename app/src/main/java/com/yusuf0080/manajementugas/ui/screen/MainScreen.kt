@@ -1,6 +1,7 @@
 package com.yusuf0080.manajementugas.ui.screen
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,9 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -45,6 +53,7 @@ import com.yusuf0080.manajementugas.model.Tugas
 import com.yusuf0080.manajementugas.navigation.Screen
 import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
 import com.yusuf0080.manajementugas.util.ViewModelFactory
+import kotlinx.coroutines.flow.StateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,8 +74,8 @@ fun MainScreen(navController: NavController) {
                     IconButton(onClick = { showList = !showList }) {
                         Icon(
                             painter = painterResource(
-                                if (showList) R.drawable.baseline_grid_view_24
-                                else R.drawable.baseline_view_list_24
+                                if (showList) R.drawable.baseline_view_list_24
+                                else R.drawable.baseline_grid_view_24
                             ),
                             contentDescription = stringResource(
                                 if (showList) R.string.grid
@@ -92,13 +101,13 @@ fun MainScreen(navController: NavController) {
             }
         }
     ) { innerPadding ->
-        ScreenContent(Modifier.padding(innerPadding), navController)
+        ScreenContent(showList, Modifier.padding(innerPadding), navController)
 
     }
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier, navController: NavController) {
+fun ScreenContent(showList: Boolean, modifier: Modifier, navController: NavController) {
     val context = LocalContext.current
     val factory = ViewModelFactory(context)
     val viewModel: MainViewModel = viewModel(factory = factory)
@@ -114,16 +123,33 @@ fun ScreenContent(modifier: Modifier, navController: NavController) {
         }
     }
     else {
-        LazyColumn(
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 84.dp)
+        if (showList) {
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 84.dp)
 
-        ) {
-            items(data) {
-                ListItem(tugas = it) {
-                    navController.navigate(Screen.FormUbah.withId(it.id))
+            ) {
+                items(data) {
+                    ListItem(tugas = it) {
+                        navController.navigate(Screen.FormUbah.withId(it.id))
+                    }
+                    HorizontalDivider()
                 }
-                HorizontalDivider()
+            }
+        }
+        else {
+            LazyVerticalStaggeredGrid(
+                modifier = modifier.fillMaxSize(),
+                columns = StaggeredGridCells.Fixed(2),
+                verticalItemSpacing = 8.dp,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
+            ) {
+                items(data) {
+                    GridItem(tugas = it) {
+                        navController.navigate(Screen.FormUbah.withId(it.id))
+                    }
+                }
             }
         }
     }
@@ -152,6 +178,35 @@ fun ListItem(tugas: Tugas, onClick: () -> Unit) {
         )
         Text(text = tugas.tanggal)
         Text(text = tugas.Prioritas)
+    }
+}
+
+@Composable
+fun GridItem(tugas: Tugas, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        border = BorderStroke(1.dp, DividerDefaults.color)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = tugas.judul,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = tugas.catatan,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(text = tugas.tanggal)
+        }
     }
 }
 
