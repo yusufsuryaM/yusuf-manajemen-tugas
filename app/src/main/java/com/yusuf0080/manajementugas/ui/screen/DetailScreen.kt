@@ -95,8 +95,8 @@ fun DetailScreen(navController: NavController, id: Long? = null) {
                 ),
                 actions = {
                     IconButton(onClick = {
-                        if (judul == "" || catatan == "") {
-                            Toast.makeText(context, R.string.invalid, Toast.LENGTH_LONG).show()
+                        if (judul == "" || catatan == "" || prioritas == "") {
+                            Toast.makeText(context, R.string.invalid_full, Toast.LENGTH_LONG).show()
                             return@IconButton
                         }
                         if (id == null) {
