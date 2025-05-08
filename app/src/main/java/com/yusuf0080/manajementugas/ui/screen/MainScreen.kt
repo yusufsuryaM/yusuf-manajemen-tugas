@@ -1,11 +1,14 @@
 package com.yusuf0080.manajementugas.ui.screen
 
 import android.content.res.Configuration
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,6 +23,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,7 +36,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,10 +59,17 @@ import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
 import com.yusuf0080.manajementugas.util.SettingsDataStore
 import com.yusuf0080.manajementugas.util.ThemeDataStore
 import com.yusuf0080.manajementugas.util.ViewModelFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+enum class SortCategory {
+    JUDUL, WAKTU, PRIORITAS
+}
+
+enum class SortOrder {
+    ASCENDING, DESCENDING
+}
+
+@RequiresApi(Build.VERSION_CODES.N)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController) {
@@ -66,58 +80,114 @@ fun MainScreen(navController: NavController) {
     val showList by layoutDataStore.layoutFlow.collectAsState(initial = true)
     val isDarkMode by themeDataStore.themeFlow.collectAsState(initial = false)
 
+    var selectedSortCategory by remember { mutableStateOf(SortCategory.WAKTU) }
+    var sortOrder by remember { mutableStateOf(SortOrder.DESCENDING) }
+
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = stringResource(id = R.string.app_name))
-                },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                actions = {
-                    // Theme toggle button
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            themeDataStore.saveTheme(!isDarkMode)
+            Column {
+                TopAppBar(
+                    title = {
+                        Text(text = stringResource(id = R.string.app_name))
+                    },
+                    colors = TopAppBarDefaults.mediumTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    actions = {
+                        IconButton(onClick = {
+                            coroutineScope.launch {
+                                themeDataStore.saveTheme(!isDarkMode)
+                            }
+                        }) {
+                            Icon(
+                                painter = painterResource(
+                                    if (isDarkMode) R.drawable.baseline_light_mode_24
+                                    else R.drawable.baseline_dark_mode_24
+                                ),
+                                contentDescription = stringResource(
+                                    if (isDarkMode) R.string.light_mode
+                                    else R.string.dark_mode
+                                ),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    }) {
-                        Icon(
-                            painter = painterResource(
-                                if (isDarkMode) R.drawable.baseline_light_mode_24
-                                else R.drawable.baseline_dark_mode_24
-                            ),
-                            contentDescription = stringResource(
-                                if (isDarkMode) R.string.light_mode
-                                else R.string.dark_mode
-                            ),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
 
-                    // Layout toggle button
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            layoutDataStore.saveLayout(!showList)
+                        IconButton(onClick = {
+                            coroutineScope.launch {
+                                layoutDataStore.saveLayout(!showList)
+                            }
+                        }) {
+                            Icon(
+                                painter = painterResource(
+                                    if (showList) R.drawable.baseline_view_list_24
+                                    else R.drawable.baseline_grid_view_24
+                                ),
+                                contentDescription = stringResource(
+                                    if (showList) R.string.grid
+                                    else R.string.list
+                                ),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    }) {
-                        Icon(
-                            painter = painterResource(
-                                if (showList) R.drawable.baseline_view_list_24
-                                else R.drawable.baseline_grid_view_24
-                            ),
-                            contentDescription = stringResource(
-                                if (showList) R.string.grid
-                                else R.string.list
-                            ),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    }
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                FilterChip(
+                                    selected = selectedSortCategory == SortCategory.JUDUL,
+                                    onClick = { selectedSortCategory = SortCategory.JUDUL },
+                                    label = { Text("Judul") }
+                                )
+                                FilterChip(
+                                    selected = selectedSortCategory == SortCategory.WAKTU,
+                                    onClick = { selectedSortCategory = SortCategory.WAKTU },
+                                    label = { Text("Waktu") }
+                                )
+                                FilterChip(
+                                    selected = selectedSortCategory == SortCategory.PRIORITAS,
+                                    onClick = { selectedSortCategory = SortCategory.PRIORITAS },
+                                    label = { Text("Prioritas") }
+                                )
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                FilterChip(
+                                    selected = sortOrder == SortOrder.ASCENDING,
+                                    onClick = { sortOrder = SortOrder.ASCENDING },
+                                    label = { Text("↑") }
+                                )
+                                FilterChip(
+                                    selected = sortOrder == SortOrder.DESCENDING,
+                                    onClick = { sortOrder = SortOrder.DESCENDING },
+                                    label = { Text("↓") }
+                                )
+                            }
+                        }
                     }
                 }
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -133,18 +203,66 @@ fun MainScreen(navController: NavController) {
             }
         }
     ) { innerPadding ->
-        ScreenContent(showList, Modifier.padding(innerPadding), navController)
+        ScreenContent(
+            showList = showList,
+            sortCategory = selectedSortCategory,
+            sortOrder = sortOrder,
+            modifier = Modifier.padding(innerPadding),
+            navController = navController
+        )
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
-fun ScreenContent(showList: Boolean, modifier: Modifier, navController: NavController) {
+fun ScreenContent(
+    showList: Boolean,
+    sortCategory: SortCategory,
+    sortOrder: SortOrder,
+    modifier: Modifier,
+    navController: NavController
+) {
     val context = LocalContext.current
     val factory = ViewModelFactory(context)
     val viewModel: MainViewModel = viewModel(factory = factory)
     val data by viewModel.data.collectAsState()
 
-    if (data.isEmpty()) {
+    // Sort data based on selected category and order
+    val sortedData = when (sortCategory) {
+        SortCategory.JUDUL -> {
+            if (sortOrder == SortOrder.ASCENDING) {
+                data.sortedBy { it.judul }
+            } else {
+                data.sortedByDescending { it.judul }
+            }
+        }
+        SortCategory.WAKTU -> {
+            if (sortOrder == SortOrder.ASCENDING) {
+                data.sortedBy { it.tanggal }
+            } else {
+                data.sortedByDescending { it.tanggal }
+            }
+        }
+        SortCategory.PRIORITAS -> {
+            val comparator = compareBy<Tugas> {
+                when (it.Prioritas) {
+                    "High" -> 0
+                    "Medium" -> 1
+                    "Low" -> 2
+                    else -> 3
+                }
+            }
+            if (sortOrder == SortOrder.ASCENDING) {
+                // Reversed for priority: Low to High
+                data.sortedWith(comparator.reversed())
+            } else {
+                // Default for priority: High to Low
+                data.sortedWith(comparator)
+            }
+        }
+    }
+
+    if (sortedData.isEmpty()) {
         Column(
             modifier = modifier.fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.Center,
@@ -158,9 +276,8 @@ fun ScreenContent(showList: Boolean, modifier: Modifier, navController: NavContr
             LazyColumn(
                 modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 84.dp)
-
             ) {
-                items(data) {
+                items(sortedData) {
                     ListItem(tugas = it) {
                         navController.navigate(Screen.FormUbah.withId(it.id))
                     }
@@ -176,7 +293,7 @@ fun ScreenContent(showList: Boolean, modifier: Modifier, navController: NavContr
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
             ) {
-                items(data) {
+                items(sortedData) {
                     GridItem(tugas = it) {
                         navController.navigate(Screen.FormUbah.withId(it.id))
                     }
@@ -188,7 +305,6 @@ fun ScreenContent(showList: Boolean, modifier: Modifier, navController: NavContr
 
 @Composable
 fun ListItem(tugas: Tugas, onClick: () -> Unit) {
-
     Column(
         modifier = Modifier.fillMaxWidth()
             .clickable { onClick() }
@@ -205,10 +321,19 @@ fun ListItem(tugas: Tugas, onClick: () -> Unit) {
             text = tugas.catatan,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
-
         )
         Text(text = tugas.tanggal)
-        Text(text = tugas.Prioritas)
+
+        // Display priority with different colors based on level
+        Text(
+            text = tugas.Prioritas,
+            color = when (tugas.Prioritas) {
+                "High" -> MaterialTheme.colorScheme.error
+                "Medium" -> MaterialTheme.colorScheme.tertiary
+                "Low" -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+        )
     }
 }
 
@@ -237,10 +362,22 @@ fun GridItem(tugas: Tugas, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
             Text(text = tugas.tanggal)
+
+            // Display priority with different colors based on level
+            Text(
+                text = tugas.Prioritas,
+                color = when (tugas.Prioritas) {
+                    "High" -> MaterialTheme.colorScheme.error
+                    "Medium" -> MaterialTheme.colorScheme.tertiary
+                    "Low" -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
+            )
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable

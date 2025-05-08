@@ -1,6 +1,5 @@
 package com.yusuf0080.manajementugas.database
 
-import androidx.compose.ui.input.pointer.PointerId
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
