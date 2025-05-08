@@ -32,6 +32,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +50,7 @@ import com.yusuf0080.manajementugas.model.Tugas
 import com.yusuf0080.manajementugas.navigation.Screen
 import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
 import com.yusuf0080.manajementugas.util.SettingsDataStore
+import com.yusuf0080.manajementugas.util.ThemeDataStore
 import com.yusuf0080.manajementugas.util.ViewModelFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,8 +59,14 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavController) {
-    val  dataStore = SettingsDataStore(LocalContext.current)
-    val showList by dataStore.layoutFlow.collectAsState(true)
+    val context = LocalContext.current
+    val layoutDataStore = SettingsDataStore(context)
+    val themeDataStore = ThemeDataStore(context)
+
+    val showList by layoutDataStore.layoutFlow.collectAsState(initial = true)
+    val isDarkMode by themeDataStore.themeFlow.collectAsState(initial = false)
+
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -71,9 +79,29 @@ fun MainScreen(navController: NavController) {
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
+                    // Theme toggle button
                     IconButton(onClick = {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            dataStore.saveLayout(!showList)
+                        coroutineScope.launch {
+                            themeDataStore.saveTheme(!isDarkMode)
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(
+                                if (isDarkMode) R.drawable.baseline_light_mode_24
+                                else R.drawable.baseline_dark_mode_24
+                            ),
+                            contentDescription = stringResource(
+                                if (isDarkMode) R.string.light_mode
+                                else R.string.dark_mode
+                            ),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // Layout toggle button
+                    IconButton(onClick = {
+                        coroutineScope.launch {
+                            layoutDataStore.saveLayout(!showList)
                         }
                     }) {
                         Icon(
@@ -106,7 +134,6 @@ fun MainScreen(navController: NavController) {
         }
     ) { innerPadding ->
         ScreenContent(showList, Modifier.padding(innerPadding), navController)
-
     }
 }
 
