@@ -36,10 +36,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +54,7 @@ import com.yusuf0080.manajementugas.model.Tugas
 import com.yusuf0080.manajementugas.navigation.Screen
 import com.yusuf0080.manajementugas.ui.theme.ManajemenTugasTheme
 import com.yusuf0080.manajementugas.util.SettingsDataStore
+import com.yusuf0080.manajementugas.util.SortPreferenceDataStore
 import com.yusuf0080.manajementugas.util.ThemeDataStore
 import com.yusuf0080.manajementugas.util.ViewModelFactory
 import kotlinx.coroutines.launch
@@ -76,12 +74,12 @@ fun MainScreen(navController: NavController) {
     val context = LocalContext.current
     val layoutDataStore = SettingsDataStore(context)
     val themeDataStore = ThemeDataStore(context)
+    val sortPreferenceDataStore = SortPreferenceDataStore(context)
 
     val showList by layoutDataStore.layoutFlow.collectAsState(initial = true)
     val isDarkMode by themeDataStore.themeFlow.collectAsState(initial = false)
-
-    var selectedSortCategory by remember { mutableStateOf(SortCategory.WAKTU) }
-    var sortOrder by remember { mutableStateOf(SortOrder.DESCENDING) }
+    val selectedSortCategory by sortPreferenceDataStore.sortCategoryFlow.collectAsState(initial = SortCategory.WAKTU)
+    val sortOrder by sortPreferenceDataStore.sortOrderFlow.collectAsState(initial = SortOrder.DESCENDING)
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -155,17 +153,29 @@ fun MainScreen(navController: NavController) {
                             ) {
                                 FilterChip(
                                     selected = selectedSortCategory == SortCategory.JUDUL,
-                                    onClick = { selectedSortCategory = SortCategory.JUDUL },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sortPreferenceDataStore.saveSortCategory(SortCategory.JUDUL)
+                                        }
+                                    },
                                     label = { Text("Judul") }
                                 )
                                 FilterChip(
                                     selected = selectedSortCategory == SortCategory.WAKTU,
-                                    onClick = { selectedSortCategory = SortCategory.WAKTU },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sortPreferenceDataStore.saveSortCategory(SortCategory.WAKTU)
+                                        }
+                                    },
                                     label = { Text("Waktu") }
                                 )
                                 FilterChip(
                                     selected = selectedSortCategory == SortCategory.PRIORITAS,
-                                    onClick = { selectedSortCategory = SortCategory.PRIORITAS },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sortPreferenceDataStore.saveSortCategory(SortCategory.PRIORITAS)
+                                        }
+                                    },
                                     label = { Text("Prioritas") }
                                 )
                             }
@@ -175,12 +185,20 @@ fun MainScreen(navController: NavController) {
                             ) {
                                 FilterChip(
                                     selected = sortOrder == SortOrder.ASCENDING,
-                                    onClick = { sortOrder = SortOrder.ASCENDING },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sortPreferenceDataStore.saveSortOrder(SortOrder.ASCENDING)
+                                        }
+                                    },
                                     label = { Text("↑") }
                                 )
                                 FilterChip(
                                     selected = sortOrder == SortOrder.DESCENDING,
-                                    onClick = { sortOrder = SortOrder.DESCENDING },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            sortPreferenceDataStore.saveSortOrder(SortOrder.DESCENDING)
+                                        }
+                                    },
                                     label = { Text("↓") }
                                 )
                             }
@@ -227,7 +245,6 @@ fun ScreenContent(
     val viewModel: MainViewModel = viewModel(factory = factory)
     val data by viewModel.data.collectAsState()
 
-    // Sort data based on selected category and order
     val sortedData = when (sortCategory) {
         SortCategory.JUDUL -> {
             if (sortOrder == SortOrder.ASCENDING) {
@@ -253,10 +270,8 @@ fun ScreenContent(
                 }
             }
             if (sortOrder == SortOrder.ASCENDING) {
-                // Reversed for priority: Low to High
                 data.sortedWith(comparator.reversed())
             } else {
-                // Default for priority: High to Low
                 data.sortedWith(comparator)
             }
         }
@@ -324,7 +339,6 @@ fun ListItem(tugas: Tugas, onClick: () -> Unit) {
         )
         Text(text = tugas.tanggal)
 
-        // Display priority with different colors based on level
         Text(
             text = tugas.Prioritas,
             color = when (tugas.Prioritas) {
@@ -363,7 +377,6 @@ fun GridItem(tugas: Tugas, onClick: () -> Unit) {
             )
             Text(text = tugas.tanggal)
 
-            // Display priority with different colors based on level
             Text(
                 text = tugas.Prioritas,
                 color = when (tugas.Prioritas) {
