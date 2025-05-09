@@ -1,5 +1,7 @@
 package com.yusuf0080.manajementugas.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,6 +13,7 @@ import com.yusuf0080.manajementugas.ui.screen.DetailScreen
 import com.yusuf0080.manajementugas.ui.screen.KEY_ID_CATATAN
 import com.yusuf0080.manajementugas.ui.screen.MainScreen
 
+@RequiresApi(Build.VERSION_CODES.N)
 @Composable
 fun SetupNavGraph(navController: NavHostController = rememberNavController()) {
     NavHost(
